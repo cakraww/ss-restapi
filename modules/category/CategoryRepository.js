@@ -72,6 +72,7 @@ module.exports = (knex) => {
     return knex('categories').where({id,})
       .limit(1)
       .del()
+      .then(nDeleted => ({nDeleted,}))
       .catch(err => {
         if (err.code == 23503) return Promise.reject(new CannotDeleteResource(err.detail))
         else return Promise.reject(new Error(err))

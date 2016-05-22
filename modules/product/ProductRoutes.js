@@ -38,14 +38,16 @@ module.exports = (ProductManager) => {
     req.checkBody('name', 'name is required').notEmpty()
     req.checkBody('price', 'price is required and must be an integer').notEmpty().isInt()
     req.checkBody('sizes', `Invalid size specified. Valid values are: ${PRODUCT_SIZES.join('/')}`)
-      .notEmpty().isSubset(PRODUCT_SIZES)
+      .optional().isSubset(PRODUCT_SIZES)
     req.checkBody('colors', `Invalid color specified. Valid values are: ${PRODUCT_COLORS.join('/')}`)
-      .notEmpty().isSubset(PRODUCT_COLORS)
+      .optional().isSubset(PRODUCT_COLORS)
     req.checkBody('categoryId', 'categoryId must be an integer').optional().isInt()
 
     req.asyncValidationErrors()
       .then(() => {
-        const {name, sizes, colors,} = req.body
+        const {name,} = req.body
+        const sizes = req.body.sizes || []
+        const colors = req.body.colors || []
         const price = Number.parseInt(req.body.price)
         const categoryId = Number.parseInt(req.body.categoryId) || null
 
@@ -62,7 +64,7 @@ module.exports = (ProductManager) => {
       .then(() => {
         const {id,} = req.params
         return ProductManager.deleteProduct(id)
-          .then(() => res.json())
+          .then(deleted => res.json(deleted))
       })
       .catch(err => jsonErrorHandler(res, err))
   })

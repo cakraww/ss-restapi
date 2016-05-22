@@ -40,7 +40,7 @@ module.exports = (CategoryManager) => {
       .then(() => {
         const {id,} = req.params
         return CategoryManager.deleteCategory(id)
-          .then(nDeleted => res.json({nDeleted,}))
+          .then(deleted => res.json(deleted))
       })
       .catch(err => jsonErrorHandler(res, err))
   })

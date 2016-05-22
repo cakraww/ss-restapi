@@ -88,7 +88,7 @@ module.exports = (knex) => {
 
   ProductRepository.getProduct = (id) => {
     return knex('products as p').leftJoin('categories as c', 'p.category_id', 'c.id')
-      .select('p.id', 'p.name', 'p.name', 'c.name as category')
+      .select('p.id', 'p.name', 'p.price', 'p.name', 'c.name as category')
       .where('p.id', id)
       .limit(1)
       .then(([product,]) => {
@@ -118,6 +118,7 @@ module.exports = (knex) => {
     return knex('products').where({id,})
       .limit(1)
       .del()
+      .then(nDeleted => ({nDeleted,}))
   }
 
   return ProductRepository
