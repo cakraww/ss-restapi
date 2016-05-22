@@ -61,7 +61,7 @@ describe('SS Rest API', function() {
           .expect(res => {
             const cat = res.body
             id = cat.id
-            assert.equal(cat.name, params.name)
+            assert.equal(cat.name, params.name + "sdfsd")
             assert.equal(cat.parent, null)
             assert.deepEqual(cat.children, [])
           })
