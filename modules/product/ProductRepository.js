@@ -1,64 +1,115 @@
 const _ = require('lodash')
+const ResourceNotFound = require('../../errors/ResourceNotFound')
+const {groupingByAndMap, toMapDefaultValue,} = require('../../util')
+
+function insertProductSizes(trx, id, sizes) {
+  const productSizes = sizes.map(size => ({product_id: id, size,}))
+  return trx.batchInsert('product_sizes', productSizes)
+}
+
+function insertProductColors(trx, id, colors) {
+  const productColors = colors.map(color => ({product_id: id, color,}))
+  return trx.batchInsert('product_colors', productColors)
+}
 
 module.exports = (knex) => {
   const ProductRepository = {}
 
-  function getProductSizesByProductIds(productIds) {
+  function getProductSizesMapByProductIds(productIds) {
     return knex('product_sizes')
       .select('product_id', 'size')
       .whereIn('product_id', productIds)
       .then(productSizes => {
-        const psm = _.groupBy(productSizes, productSize => productSize.product_id)
-        return _.mapValues(psm, pss => pss.map(pss => pss.size))
+        const nonzeromap = groupingByAndMap(productSizes, ps => ps.product_id, ps => ps.size)
+        const zeromap = toMapDefaultValue(productIds, [])
+        return _.merge(nonzeromap, zeromap)
       })
   }
 
-  ProductRepository.getProducts = () => {
-    return knex('products').select('*')
-      .then(products => {
-        const ids = products.map(product => product.id)
-        return getProductSizesByProductIds(ids)
-          .then(productSizesMap => {
-            const init = ids.reduce((acc, id) => {
-              acc[id] = []
-              return acc
-            }, {})
-
-            const productSizeMapping = _.merge(init, productSizesMap)
-            return productSizeMapping
-          })
-          .then(productSizeMapping => products.map(product =>
-            _.merge(product, {sizes: productSizeMapping[product.id],})
-          ))
+  function getProductColorsMapByProductIds(productIds) {
+    return knex('product_colors')
+      .select('product_id', 'color')
+      .whereIn('product_id', productIds)
+      .then(productColors => {
+        const nonzeromap = groupingByAndMap(productColors, pc => pc.product_id, pc => pc.color)
+        const zeromap = toMapDefaultValue(productIds, [])
+        return _.merge(nonzeromap, zeromap)
       })
+  }
+
+  ProductRepository.getProducts = (sizes, colors, priceMin, priceMax) => {
+    let query = knex('products as p')
+      .select('p.id', 'p.name', 'p.price')
+      .distinct('p.id')
+
+    if (sizes.length > 0)
+      query = query.leftJoin('product_sizes as ps', 'p.id', 'ps.product_id')
+        .whereIn('ps.size', sizes)
+
+    if (colors.length > 0)
+      query = query.leftJoin('product_colors as pc', 'p.id', 'pc.product_id')
+        .whereIn('pc.color', colors)
+
+    console.log('pminmax', priceMin, priceMax)
+    if (priceMin !== null) query = query.where('p.price', '>=', priceMin)
+    if (priceMax !== null) query = query.where('p.price', '<=', priceMax)
+
+    let products = []
+    let sizesMap = {}
+    let colorsMap = {}
+    return query.then(_products => {
+      products = _products
+      return products.map(product => product.id)
+    })
+    .then(ids => getProductSizesMapByProductIds(ids)
+      .then(_sizesMap => sizesMap = _sizesMap)
+      .then(() => ids)
+    )
+    .then(ids => getProductColorsMapByProductIds(ids)
+      .then(_colorsMap => colorsMap = _colorsMap)
+    )
+    .then(() => products.map(product =>
+      _.merge(product, {
+        colors: colorsMap[product.id],
+        sizes: sizesMap[product.id],
+      })
+    ))
+  }
+
+  function getProductSizesByProductId(productId) {
+    return knex('product_sizes').select('size').where({product_id: productId,})
+      .then(sizes => sizes.map(size => size.size))
+  }
+
+  function getProductColorsByProductId(productId) {
+    return knex('product_colors').select('color').where({product_id: productId,})
+      .then(colors => colors.map(color => color.color))
   }
 
   ProductRepository.getProduct = (id) => {
     return knex('products').select('*')
       .where({id,})
       .limit(1)
-      .then(([product,]) => product)
-  }
-
-  ProductRepository.SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL',]
-
-  function insertProductSizes(id, sizes) {
-    const productSizes = sizes.map(size => ({
-      product_id: id, size,
-    }))
-
-    if (!_.every(productSizes, productSize => _.includes(ProductRepository.SIZES, productSize.size)))
-      return Promise.reject('Invalid size specified')
-    else
-      return knex.batchInsert('product_sizes', productSizes)
-  }
-
-  ProductRepository.createProduct = (name, price, sizes) => {
-    return knex('products').insert({name, price,})
-      .returning('id')
-      .then(([id,]) => {
-        return insertProductSizes(id, sizes).then(() => id)
+      .then(([product,]) => {
+        if (!product) return Promise.reject(new ResourceNotFound(`Product with id ${id} is not found`))
+        return product
       })
+      .then(product => getProductSizesByProductId(product.id)
+        .then(sizes => _.merge(product, {sizes,}))
+      )
+      .then(product => getProductColorsByProductId(product.id)
+        .then(colors => _.merge(product, {colors,}))
+      )
+  }
+
+  ProductRepository.createProduct = (name, price, sizes, colors) => {
+    return knex.transaction(trx =>
+      trx('products').insert({name, price,})
+        .returning('id')
+        .then(([id,]) => id)
+        .then(id => insertProductSizes(trx, id, sizes).then(() => id))
+        .then(id => insertProductColors(trx, id, colors).then(() => id))
+    )
       .then(id => ProductRepository.getProduct(id))
   }
 
