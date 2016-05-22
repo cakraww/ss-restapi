@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "start": "nodemon ./bin/www",
+    "lint": "eslint .",
     "test": "NODE_ENV=test mocha"
   },
   "dependencies": {
