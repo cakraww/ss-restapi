@@ -3,7 +3,10 @@
 /**
  * Module dependencies.
  */
-require('dotenv').load()
+const ENV = process.env.NODE_ENV || 'development'
+if (ENV === 'development') {
+  require('dotenv').load()
+}
 
 const app = require('../index')
 const debug = require('debug')('ss-restapi:server')

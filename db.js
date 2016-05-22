@@ -1,7 +1,10 @@
-const ENV = process.env.NODE_ENV
 const connectionUrl = process.env.POSTGRESQL_URL
 const schema = process.env.POSTGRESQL_SCHEMA
-console.log(`DB running on ${ENV}\nconnectionUrl: ${connectionUrl}\nschema:${schema}`)
+
+if (!connectionUrl || !schema) {
+  console.log('> POSTGRESQL_URL or POSTGRESQL_SCHEMA is not set')
+  process.exit(1)
+}
 
 const knex = require('knex')({
   client: 'pg',

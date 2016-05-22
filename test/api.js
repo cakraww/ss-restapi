@@ -9,7 +9,10 @@ const qs = require('qs')
 const path = require('path')
 const request = require('supertest')
 const assert = require('assert')
-require('dotenv').load({path: path.resolve(__dirname, '..', '.env.test'),})
+
+try {
+  require('dotenv').load({path: path.resolve(__dirname, '..', '.env.testi'),})
+} catch(e) { /* empty, env vars are set manually*/ }
 
 const app = require('../index')
 const knex = require('../index').db
