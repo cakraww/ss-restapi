@@ -39,7 +39,8 @@ module.exports = (knex) => {
 
   ProductRepository.getProducts = (sizes, colors, priceMin, priceMax) => {
     let query = knex('products as p')
-      .select('p.id', 'p.name', 'p.price')
+      .leftJoin('categories as c', 'p.category_id', 'c.id')
+      .select('p.id', 'p.name', 'p.price', 'c.name as category')
       .distinct('p.id')
 
     if (sizes.length > 0)
@@ -50,7 +51,6 @@ module.exports = (knex) => {
       query = query.leftJoin('product_colors as pc', 'p.id', 'pc.product_id')
         .whereIn('pc.color', colors)
 
-    console.log('pminmax', priceMin, priceMax)
     if (priceMin !== null) query = query.where('p.price', '>=', priceMin)
     if (priceMax !== null) query = query.where('p.price', '<=', priceMax)
 
@@ -87,8 +87,9 @@ module.exports = (knex) => {
   }
 
   ProductRepository.getProduct = (id) => {
-    return knex('products').select('*')
-      .where({id,})
+    return knex('products as p').leftJoin('categories as c', 'p.category_id', 'c.id')
+      .select('p.id', 'p.name', 'p.name', 'c.name as category')
+      .where('p.id', id)
       .limit(1)
       .then(([product,]) => {
         if (!product) return Promise.reject(new ResourceNotFound(`Product with id ${id} is not found`))
@@ -102,9 +103,9 @@ module.exports = (knex) => {
       )
   }
 
-  ProductRepository.createProduct = (name, price, sizes, colors) => {
+  ProductRepository.createProduct = (name, price, sizes, colors, categoryId) => {
     return knex.transaction(trx =>
-      trx('products').insert({name, price,})
+      trx('products').insert({name, price, category_id: categoryId,})
         .returning('id')
         .then(([id,]) => id)
         .then(id => insertProductSizes(trx, id, sizes).then(() => id))

@@ -19,11 +19,11 @@ module.exports.toMapDefaultValue = (collection, defaultValue) => {
 module.exports.jsonErrorHandler = (res, err) => {
   console.log(err)
   if (Array.isArray(err))  // validation errors
-    res.json({message: `Validation error: ${util.inspect(err)}`,}, 400)
+    res.status(400).json({message: `Validation error: ${util.inspect(err)}`,})
   else if (err instanceof ResourceNotFound)
-    res.json({message: err.message,}, 404)
+    res.status(404).json({message: err.message,})
   else if (err instanceof DuplicateData || err instanceof CannotDeleteResource)
-    res.json({message: err.message,}, 409)
+    res.status(409).json({message: err.message,})
   else
-    res.json({message: 'Internal server error',}, 500)
+    res.status(500).json({message: 'Internal server error',})
 }

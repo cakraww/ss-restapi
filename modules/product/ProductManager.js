@@ -9,8 +9,8 @@ module.exports = (productRepo) => {
     return productRepo.getProducts(sizes, colors, priceMin, priceMax)
   }
 
-  ProductManager.createProduct = (name, price, sizes = [], colors = []) => {
-    return productRepo.createProduct(name, price, sizes, colors)
+  ProductManager.createProduct = (name, price, sizes = [], colors = [], categoryId = null) => {
+    return productRepo.createProduct(name, price, sizes, colors, categoryId)
   }
 
   ProductManager.deleteProduct = id => {

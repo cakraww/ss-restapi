@@ -45,9 +45,10 @@ module.exports = (ProductManager) => {
 
     req.asyncValidationErrors()
       .then(() => {
-        let {name, price, sizes, colors, categoryId,} = req.body
-        console.log('colors:', colors)
-        price = Number(price)
+        const {name, sizes, colors,} = req.body
+        const price = Number.parseInt(req.body.price)
+        const categoryId = Number.parseInt(req.body.categoryId) || null
+
         return ProductManager.createProduct(name, price, sizes, colors, categoryId)
           .then(product => res.json(product))
           .catch(err => jsonErrorHandler(res, err))
