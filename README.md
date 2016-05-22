@@ -27,15 +27,14 @@ Product and Category management with hierarchical tree data for Category. Can fi
 
 ##Endpoints
 ```
-/api
-  /products
-    GET     /       getProducts(sizes, colors, priceMin, priceMax)
-    GET     /:id    getProduct()
-    POST    /       createProduct(name, price, sizes, colors, categoryId)
-    DELETE  /:id    deleteProduct()
-  /categories
-    GET     /       getCategories()
-    GET     /:id    getCategory()
-    POST    /       createCategory(name, parentId)
-    DELETE  /:id    deleteCategory()
+/products
+  GET     /       getProducts(sizes, colors, priceMin, priceMax)
+  GET     /:id    getProduct()
+  POST    /       createProduct(name, price, sizes, colors, categoryId)
+  DELETE  /:id    deleteProduct()
+/categories
+  GET     /       getCategories()
+  GET     /:id    getCategory()
+  POST    /       createCategory(name, parentId)
+  DELETE  /:id    deleteCategory()
 ```
