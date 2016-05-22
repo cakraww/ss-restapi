@@ -11,7 +11,7 @@ const request = require('supertest')
 const assert = require('assert')
 
 try {
-  require('dotenv').load({path: path.resolve(__dirname, '..', '.env.test'),})
+  require('dotenv').load({path: path.resolve(__dirname, '..', '.env.testi'),})
 } catch(e) { /* empty, env vars are set manually*/ }
 
 const app = require('../index')
