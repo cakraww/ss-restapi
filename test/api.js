@@ -11,7 +11,7 @@ const request = require('supertest')
 const assert = require('assert')
 
 try {
-  require('dotenv').load({path: path.resolve(__dirname, '..', '.env.testi'),})
+  require('dotenv').load({path: path.resolve(__dirname, '..', '.env.test'),})
 } catch(e) { /* empty, env vars are set manually*/ }
 
 const app = require('../index')
@@ -61,7 +61,7 @@ describe('SS Rest API', function() {
           .expect(res => {
             const cat = res.body
             id = cat.id
-            assert.equal(cat.name, params.name + "sdfsd")
+            assert.equal(cat.name, params.name)
             assert.equal(cat.parent, null)
             assert.deepEqual(cat.children, [])
           })
