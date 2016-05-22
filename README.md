@@ -10,7 +10,7 @@ Product and Category management with hierarchical tree data for Category. Can fi
 - sizes: [Size]
 - colors: [Color]
 
-###ProducSize
+###ProductSize
 - size
 - product: Product
 
